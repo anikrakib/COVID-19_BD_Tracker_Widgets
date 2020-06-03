@@ -214,8 +214,6 @@ public class AppWidget extends AppWidgetProvider {
             }
         }, 1000);
 
-
-        //If multiple widgets are active, then update them all
         for (int appWidgetId : appWidgetIds) {
             updateAppWidget(context, appWidgetManager, appWidgetId);
         }
