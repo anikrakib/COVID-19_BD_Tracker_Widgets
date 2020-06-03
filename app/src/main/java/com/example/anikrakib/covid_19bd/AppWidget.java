@@ -59,10 +59,10 @@ public class AppWidget extends AppWidgetProvider {
                             JSONObject test = jsonObject.getJSONObject("test");
 
 
-                            views[0] = setViewGroupCases(views[0], cases);
-                            views[0] = setViewGroupDeath(views[0], death);
-                            views[0] = setViewGroupRecover(views[0], recover);
-                            views[0] = setViewGroupTest(views[0], test);
+//                            views[0] = setViewGroupCases(views[0], cases);
+//                            views[0] = setViewGroupDeath(views[0], death);
+//                            views[0] = setViewGroupRecover(views[0], recover);
+//                            views[0] = setViewGroupTest(views[0], test);
                             views[0] = setViewGroupLastUpdate(views[0], jsonObject);
 
 
@@ -105,7 +105,8 @@ public class AppWidget extends AppWidgetProvider {
                             JSONObject jsonObject = new JSONObject(response.toString());
                             JSONObject data = jsonObject.getJSONObject("data");
 
-                            //views[0] = setViewGroup(views[0], data);
+                            views[0] = setViewGroup(views[0], data);
+                            views[0] = setViewGroupSource(views[0], jsonObject);
 
                             Intent intentSync = new Intent(context, AppWidget.class);
                             intentSync.setAction(AppWidgetManager.ACTION_APPWIDGET_UPDATE);
@@ -244,18 +245,41 @@ public class AppWidget extends AppWidgetProvider {
     }
     static RemoteViews setViewGroup(RemoteViews views, JSONObject data){
         try {
-            views.setTextViewText(R.id.todayPositiveBD,data.getString("new_infected"));
-            views.setTextViewText(R.id.confirmedTv, data.getString("total_infected"));
-            views.setTextViewText(R.id.todayRecoverBd, data.getString("new_cured"));
-            views.setTextViewText(R.id.recoveredTv, data.getString("total_cured"));
-            views.setTextViewText(R.id.todayDeathBD, data.getString("new_death"));
-            views.setTextViewText(R.id.deceasedTv, data.getString("total_death"));
-            views.setTextViewText(R.id.todayTestBD, data.getString("new_test"));
+            views.setTextViewText(R.id.todayPositiveBD,getdateInEnglish(data.getString("new_infected")));
+            views.setTextViewText(R.id.confirmedTv,getdateInEnglish(data.getString("total_infected")));
+            views.setTextViewText(R.id.todayRecoverBd, getdateInEnglish(data.getString("new_cured")));
+            views.setTextViewText(R.id.recoveredTv, getdateInEnglish(data.getString("total_cured")));
+            views.setTextViewText(R.id.todayDeathBD, getdateInEnglish(data.getString("new_death")));
+            views.setTextViewText(R.id.deceasedTv, getdateInEnglish(data.getString("total_death")));
+            views.setTextViewText(R.id.todayTestBD, getdateInEnglish(data.getString("new_test")));
         } catch (JSONException e) {
             e.printStackTrace();
         }
         return views;
     }
+
+    public static String getdateInEnglish(String string)
+    {
+        Character bangla_number[]={'০','১','২','৩','৪','৫','৬','৭','৮','৯'};
+        Character eng_number[]={'0','1','2','3','4','5','6','7','8','9'};
+        String values = "";
+        char[] character = string.toCharArray();
+        for (int i=0; i<character.length ; i++) {
+            Character c = ' ';
+            for (int j = 0; j < eng_number.length; j++) {
+                if(character[i]==bangla_number[j])
+                {
+                    c=eng_number[j];
+                    break;
+                }else {
+                    c=character[i];
+                }
+            }
+            values=values+c;
+        }
+        return values;
+    }
+
     static RemoteViews setViewGroupCases(RemoteViews views, JSONObject data){
         try {
             views.setTextViewText(R.id.todayPositiveBD, data.getString("last24"));
@@ -306,6 +330,16 @@ public class AppWidget extends AppWidgetProvider {
         }
         return views;
     }
+    static RemoteViews setViewGroupSource(RemoteViews views, JSONObject data){
+        try {
+
+            views.setTextViewText(R.id.source,data.getString("source"));
+
+        } catch (JSONException e) {
+            e.printStackTrace();
+        }
+        return views;
+    }
     static RemoteViews setViewGroupLastUpdate(RemoteViews views, JSONObject data){
         try {
 
@@ -317,27 +351,7 @@ public class AppWidget extends AppWidgetProvider {
         return views;
     }
 
-    public String getdateInEnglish(RemoteViews views,String string)
-    {
-        Character bangla_number[]={'০','১','২','৩','৪','৫','৬','৭','৮','৯'};
-        Character eng_number[]={'0','1','2','3','4','5','6','7','8','9'};
-        String values = "";
-        char[] character = string.toCharArray();
-        for (int i=0; i<character.length ; i++) {
-            Character c = ' ';
-            for (int j = 0; j < eng_number.length; j++) {
-                if(character[i]==bangla_number[j])
-                {
-                    c=eng_number[j];
-                    break;
-                }else {
-                    c=character[i];
-                }
-            }
-            values=values+c;
-        }
-        return values;
-    }
+
     //Check if device is connected to a network
     private boolean isNetworkConnected(Context context) {
         ConnectivityManager connectivityManager = (ConnectivityManager) context.getSystemService(Context.CONNECTIVITY_SERVICE);
