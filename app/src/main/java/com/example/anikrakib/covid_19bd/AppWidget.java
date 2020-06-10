@@ -27,11 +27,14 @@ import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.io.UnsupportedEncodingException;
+import java.text.SimpleDateFormat;
+import java.util.Calendar;
 
 /**
  * Implementation of App Widget functionality.
  */
 public class AppWidget extends AppWidgetProvider {
+
 
     static void updateAppWidget(final Context context, final AppWidgetManager appWidgetManager,
                                 final int appWidgetId) {
@@ -63,7 +66,7 @@ public class AppWidget extends AppWidgetProvider {
 //                            views[0] = setViewGroupDeath(views[0], death);
 //                            views[0] = setViewGroupRecover(views[0], recover);
 //                            views[0] = setViewGroupTest(views[0], test);
-                            views[0] = setViewGroupLastUpdate(views[0], jsonObject);
+//                            views[0] = setViewGroupLastUpdate(views[0], jsonObject);
 
 
                             Intent intentSync = new Intent(context, AppWidget.class);
@@ -106,6 +109,7 @@ public class AppWidget extends AppWidgetProvider {
                             JSONObject data = jsonObject.getJSONObject("data");
 
                             views[0] = setViewGroup(views[0], data);
+                            //views[0] = setViewRate(views[0], data);
                             views[0] = setViewGroupSource(views[0], jsonObject);
 
                             Intent intentSync = new Intent(context, AppWidget.class);
@@ -149,6 +153,7 @@ public class AppWidget extends AppWidgetProvider {
 
 
                             views[0] = setViewGroupActive(views[0], jsonObject);
+                            views[0] = setViewGroupLastUpdate(views[0], jsonObject);
 
 
                             Intent intentSync = new Intent(context, AppWidget.class);
@@ -183,7 +188,7 @@ public class AppWidget extends AppWidgetProvider {
 
         queue.add(stringRequest);
 
-        queue.add(stringRequest1);//this request use for active cases
+        queue.add(stringRequest1);
     }
 
     @Override
@@ -243,6 +248,7 @@ public class AppWidget extends AppWidgetProvider {
     public void onDisabled(Context context) {
 
     }
+
     static RemoteViews setViewGroup(RemoteViews views, JSONObject data){
         try {
             views.setTextViewText(R.id.todayPositiveBD,getdateInEnglish(data.getString("new_infected")));
@@ -252,6 +258,8 @@ public class AppWidget extends AppWidgetProvider {
             views.setTextViewText(R.id.todayDeathBD, getdateInEnglish(data.getString("new_death")));
             views.setTextViewText(R.id.deceasedTv, getdateInEnglish(data.getString("total_death")));
             views.setTextViewText(R.id.todayTestBD, getdateInEnglish(data.getString("new_test")));
+
+            //views.setTextViewText(R.id.rate, "Today Death Rate "+todayDeath+"%\nToday Positive Rate "+todayPositive+"%\nToday Test Rate "+todayTest+"%\nToday Recover Rate "+todayRecover+"%\n");
         } catch (JSONException e) {
             e.printStackTrace();
         }
@@ -284,6 +292,31 @@ public class AppWidget extends AppWidgetProvider {
         try {
             views.setTextViewText(R.id.todayPositiveBD, data.getString("last24"));
             views.setTextViewText(R.id.confirmedTv, data.getString("total"));
+        } catch (JSONException e) {
+            e.printStackTrace();
+        }
+        return views;
+    }
+    static RemoteViews setViewRate(RemoteViews views, JSONObject data){
+        try {
+
+            int totalDeath,totalRecover,totalTest,totalPositive,todayDeath,todayPositive,todayTest,todayRecover;
+            float deathRate,positiveRate,testRate,recoverRate;
+            todayPositive=Integer.parseInt(getdateInEnglish(data.getString("new_infected")));
+            todayDeath=Integer.parseInt(getdateInEnglish(data.getString("new_death")));
+            todayRecover=Integer.parseInt(getdateInEnglish(data.getString("new_cured")));
+            todayTest=Integer.parseInt(getdateInEnglish(data.getString("new_test")));
+            totalPositive=Integer.parseInt(getdateInEnglish(data.getString("total_infected")));
+            totalDeath=Integer.parseInt(getdateInEnglish(data.getString("total_death")));
+            totalRecover=Integer.parseInt(getdateInEnglish(data.getString("total_cured")));
+            totalTest=Integer.parseInt(getdateInEnglish(data.getString("total_test")));
+
+            deathRate = (todayDeath*100)/totalDeath;
+            positiveRate = (todayPositive*100)/totalPositive;
+            recoverRate = (todayRecover*100)/totalRecover;
+            testRate = (todayTest*100)/totalTest;
+
+            //views.setTextViewText(R.id.rate, "Today Death Rate "+deathRate+"%");
         } catch (JSONException e) {
             e.printStackTrace();
         }
@@ -343,15 +376,22 @@ public class AppWidget extends AppWidgetProvider {
     static RemoteViews setViewGroupLastUpdate(RemoteViews views, JSONObject data){
         try {
 
-            views.setTextViewText(R.id.lastUpdatedTv,data.getString("updated_on"));
+            //views.setTextViewText(R.id.lastUpdatedTv,data.getString("updated_on"));
+            views.setTextViewText(R.id.lastUpdatedTv,getDate(data.getLong("updated")));
 
         } catch (JSONException e) {
             e.printStackTrace();
         }
         return views;
     }
+    private static String getDate(long milliSecond){
+        // Mon, 23 Mar 2020 02:01:04 PM
+        SimpleDateFormat formatter = new SimpleDateFormat("EEEE | dd MMM yyyy | hh:mm:ss aaa");
 
-
+        Calendar calendar= Calendar.getInstance();
+        calendar.setTimeInMillis(milliSecond);
+        return formatter.format(calendar.getTime());
+    }
     //Check if device is connected to a network
     private boolean isNetworkConnected(Context context) {
         ConnectivityManager connectivityManager = (ConnectivityManager) context.getSystemService(Context.CONNECTIVITY_SERVICE);
